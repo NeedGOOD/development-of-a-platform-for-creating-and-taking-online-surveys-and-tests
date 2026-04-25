@@ -7,6 +7,8 @@ import { LandingPage } from "./LandingPage";
 import { RegisterPage } from "./Autharization/RegisterPage";
 import { NotFoundPage } from "./NotFoundPage";
 import { DashboardPage } from "./DashboardPage";
+import { MyFormsPage } from "./MyForms";
+import { ProfilePage } from "./Profile";
 
 export default function App() {
   return (
@@ -20,6 +22,8 @@ export default function App() {
         </Route>
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard/forms" element={<MyFormsPage />} />
+          <Route path="/dashboard/profile" element={<ProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -19,9 +19,9 @@ const testUser = {
 };
 
 function getSelectedKey(path) {
-  if (path.startsWith('/app/forms')) return '/app/forms';
-  if (path.startsWith('/app/profile')) return '/app/profile';
-  return '/app';
+  if (path.startsWith('/dashboard/forms')) return '/dashboard/forms';
+  if (path.startsWith('/dashboard/profile')) return '/dashboard/profile';
+  return '/dashboard';
 }
 
 export default function AppLayout() {
@@ -43,9 +43,9 @@ export default function AppLayout() {
 
   const menuItems = useMemo(() => {
     return [
-      { key: '/app', icon: <DashboardOutlined />, label: 'Dashboard' },
-      { key: '/app/forms', icon: <FormOutlined />, label: 'Forms' },
-      { key: '/app/profile', icon: <UserOutlined />, label: 'Profile' },
+      { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
+      { key: '/dashboard/forms', icon: <FormOutlined />, label: 'Forms' },
+      { key: '/dashboard/profile', icon: <UserOutlined />, label: 'Profile' },
     ];
   }, []);
 
@@ -56,7 +56,7 @@ export default function AppLayout() {
           key: 'profile',
           icon: <UserOutlined />,
           label: 'Profile',
-          onClick: () => navigate('/app/profile'),
+          onClick: () => navigate('/dashboard/profile'),
         },
         {
           key: 'seed',
@@ -173,20 +173,20 @@ export default function AppLayout() {
               )}
 
               <Typography.Text className="sl-muted" style={{ fontWeight: 700 }}>
-                {path.startsWith('/app/forms')
+                {path.startsWith('/dashboard/forms')
                   ? 'Forms'
-                  : path === '/app/profile'
+                  : path === '/dashboard/profile'
                   ? 'Profile'
                   : 'Dashboard'}
               </Typography.Text>
             </Space>
 
             {(user.role === 'CREATOR' || user.role === 'ADMIN') &&
-              path === '/app/forms' && (
+              path === '/dashboard/forms' && (
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
-                  onClick={() => navigate('/app/forms/new')}
+                  onClick={() => navigate('/dashboard/forms/new')}
                 >
                   Create
                 </Button>
