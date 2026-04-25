@@ -6,7 +6,7 @@ import { Link, Outlet } from 'react-router-dom';
 const { Header, Content, Footer } = Layout;
 
 export default function SiteHeader() {
-  const [isAuthed, setIsAuthed] = useState(true);
+  const [isAuthed, setIsAuthed] = useState(false);
 
   return (
     <Layout style={{ minHeight: '100vh', background: 'transparent' }}>
