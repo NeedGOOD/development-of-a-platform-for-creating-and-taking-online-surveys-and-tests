@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Repository } from 'typeorm';
@@ -13,6 +13,12 @@ export class UserService {
   ) { }
 
   async create(createUserDto: CreateUserDto) {
+    const user = await this.findUserByEmail(createUserDto.email);
+
+    if (user) {
+      throw new ConflictException('A user with such email exists.');
+    }
+
     const createUser = this.userRepository.create({
       ...createUserDto,
       password_hash: createUserDto.password,
@@ -23,8 +29,12 @@ export class UserService {
     return savedUser;
   }
 
-  findAll() {
-    return `This action returns all user`;
+  async findAll() {
+    return await this.userRepository.find();
+  }
+
+  private async findUserByEmail(email: string) {
+    return await this.userRepository.findOne({ where: { email } });
   }
 
   findOne(id: number) {
