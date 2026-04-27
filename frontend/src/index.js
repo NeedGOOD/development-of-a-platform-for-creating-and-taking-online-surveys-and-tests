@@ -3,11 +3,17 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './pages/App.jsx';
 import reportWebVitals from './reportWebVitals';
+import { App as AntApp } from 'antd';
+import { AuthProvider } from './auth/AuthContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <AntApp>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </AntApp>
   </React.StrictMode>
 );
 

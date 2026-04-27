@@ -2,21 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { App, Button, Form, Input, Space, Tag, Typography } from 'antd';
 import { LogoutOutlined, SaveOutlined } from '@ant-design/icons';
 import { GlassCard } from '../components/GlassCard';
-
-const testUser = {
-  name: 'Creator',
-  email: 'alex@test.com',
-  role: 'CREATOR',
-  isGuest: false,
-};
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 
 export function ProfilePage() {
   const { message } = App.useApp();
-  const [user, setUser] = useState(testUser);
+  const navigate = useNavigate();
+  const { user, updateProfile, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
   useEffect(() => {
+    if (!user) return;
     form.setFieldsValue({
       name: user.name,
       email: user.email,
@@ -24,25 +21,28 @@ export function ProfilePage() {
     });
   }, [user, form]);
 
-  function save(values) {
+  async function save(values) {
     setLoading(true);
 
-    setTimeout(() => {
-      const nextUser = {
-        ...user,
+    try {
+      updateProfile({
         name: values.name,
-      };
+      });
 
-      setUser(nextUser);
       message.success('Saved');
+    } catch (error) {
+      message.error(error?.message || 'Save failed');
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   }
 
-  function logout() {
-    console.log('Logout demo');
-    message.info('Logout demo');
+  function handleLogout() {
+    logout();
+    navigate('/login');
   }
+
+  if (!user) return null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 720 }}>
@@ -53,7 +53,6 @@ export function ProfilePage() {
       >
         <Space wrap size={8}>
           <Tag color="geekblue">{user.role}</Tag>
-          {user.isGuest ? <Tag>Guest</Tag> : null}
         </Space>
 
         <Form form={form} layout="vertical" onFinish={save} requiredMark={false}>
@@ -74,7 +73,7 @@ export function ProfilePage() {
           </Form.Item>
 
           <Space wrap style={{ justifyContent: 'space-between', width: '100%' }}>
-            <Button danger icon={<LogoutOutlined />} onClick={logout}>
+            <Button danger icon={<LogoutOutlined />} onClick={handleLogout}>
               Logout
             </Button>
 

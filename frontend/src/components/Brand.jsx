@@ -1,5 +1,5 @@
 import React from 'react';
-import { Space, Typography } from 'antd';
+import { Typography } from 'antd';
 
 export function Brand({ compact = false }) {
   return (

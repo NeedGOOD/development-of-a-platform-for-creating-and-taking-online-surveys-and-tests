@@ -23,63 +23,14 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { GlassCard } from '../components/GlassCard';
-
-const FORM_MODE = {
-  TEST: 'TEST',
-  SURVEY: 'SURVEY',
-};
-
-const FORM_STATUS = {
-  DRAFT: 'DRAFT',
-  PUBLISHED: 'PUBLISHED',
-  ARCHIVED: 'ARCHIVED',
-};
-
-const testUser = {
-  id: 1,
-  name: 'Creator',
-  email: 'alex@test.com',
-  role: 'CREATOR',
-};
-
-const testForms = [
-  {
-    id: 1,
-    title: 'JavaScript Basics',
-    description: 'Basic JavaScript test for beginners.',
-    mode: FORM_MODE.TEST,
-    status: FORM_STATUS.PUBLISHED,
-    accessCode: 'JS-101',
-    cover: { hue: 45 },
-  },
-  {
-    id: 2,
-    title: 'Feedback Survey',
-    description: 'Short survey for collecting feedback.',
-    mode: FORM_MODE.SURVEY,
-    status: FORM_STATUS.PUBLISHED,
-    accessCode: 'FB-001',
-    cover: { hue: 150 },
-  },
-  {
-    id: 3,
-    title: 'React Fundamentals',
-    description: 'React components, props, state and hooks.',
-    mode: FORM_MODE.TEST,
-    status: FORM_STATUS.DRAFT,
-    accessCode: null,
-    cover: { hue: 210 },
-  },
-  {
-    id: 4,
-    title: 'UI/UX Survey',
-    description: 'Survey about interface and user experience.',
-    mode: FORM_MODE.SURVEY,
-    status: FORM_STATUS.DRAFT,
-    accessCode: null,
-    cover: { hue: 280 },
-  },
-];
+import {
+  FORM_MODE,
+  FORM_STATUS,
+  createForm,
+  listForms,
+  publishForm,
+} from '../testdata';
+import { useAuth } from '../auth/AuthContext';
 
 function modeTag(mode) {
   if (mode === FORM_MODE.TEST) return <Tag color="gold">TEST</Tag>;
@@ -93,7 +44,7 @@ function statusTag(status) {
 }
 
 function formShareUrl(formId) {
-  return `${window.location.origin}/play/${formId}`;
+  return `${window.location.origin}/dashboard/forms/${formId}/take`;
 }
 
 function FormCard({ form, actions }) {
@@ -142,17 +93,19 @@ export function MyFormsPage() {
   const { message } = App.useApp();
   const navigate = useNavigate();
 
-  const user = testUser;
+  const { user } = useAuth();
   const isCreator = user.role === 'CREATOR' || user.role === 'ADMIN';
 
-  const [forms, setForms] = useState(testForms);
+  const [forms, setForms] = useState(() => listForms());
   const [q, setQ] = useState('');
 
   const published = useMemo(() => {
     return forms.filter((form) => form.status === FORM_STATUS.PUBLISHED);
   }, [forms]);
 
-  const mine = forms;
+  const mine = useMemo(() => {
+    return forms.filter((form) => String(form.ownerId) === String(user.id));
+  }, [forms, user.id]);
 
   const filteredPublished = useMemo(() => {
     const search = q.trim().toLowerCase();
@@ -179,37 +132,26 @@ export function MyFormsPage() {
   }, [mine, q]);
 
   function createNew(mode) {
-    const newForm = {
-      id: Date.now(),
+    const newForm = createForm({
+      ownerId: user.id,
+      mode,
       title: mode === FORM_MODE.TEST ? 'New Test' : 'New Survey',
       description: 'New draft form.',
-      mode,
-      status: FORM_STATUS.DRAFT,
-      accessCode: null,
-      cover: {
-        hue: Math.floor(Math.random() * 360),
-      },
-    };
+    });
 
-    setForms((prev) => [newForm, ...prev]);
+    setForms(listForms());
     message.success('Form created');
-    navigate(`/app/forms/${newForm.id}/edit`);
+    navigate(`/dashboard/forms/${newForm.id}/edit`);
   }
 
   function publish(formId) {
-    setForms((prev) =>
-      prev.map((form) =>
-        form.id === formId
-          ? {
-              ...form,
-              status: FORM_STATUS.PUBLISHED,
-              accessCode: form.accessCode || `FORM-${form.id}`,
-            }
-          : form
-      )
-    );
-
-    message.success('Published');
+    try {
+      publishForm(formId);
+      setForms(listForms());
+      message.success('Published');
+    } catch (error) {
+      message.error(error?.message || 'Publish failed');
+    }
   }
 
   async function copy(text) {
@@ -238,7 +180,7 @@ export function MyFormsPage() {
                 size="small"
                 type="primary"
                 icon={<PlayCircleOutlined />}
-                onClick={() => navigate(`/app/forms/${form.id}/take`)}
+                onClick={() => navigate(`/dashboard/forms/${form.id}/take`)}
               >
                 Take
               </Button>,
@@ -283,7 +225,7 @@ export function MyFormsPage() {
                 key="edit"
                 size="small"
                 icon={<EditOutlined />}
-                onClick={() => navigate(`/app/forms/${form.id}/edit`)}
+                onClick={() => navigate(`/dashboard/forms/${form.id}/edit`)}
               >
                 Edit
               </Button>,
@@ -292,7 +234,7 @@ export function MyFormsPage() {
                 key="preview"
                 size="small"
                 icon={<EyeOutlined />}
-                onClick={() => navigate(`/app/forms/${form.id}/take`)}
+                onClick={() => navigate(`/dashboard/forms/${form.id}/take`)}
               >
                 Preview
               </Button>,
@@ -301,7 +243,7 @@ export function MyFormsPage() {
                 <Button
                   size="small"
                   icon={<BarChartOutlined />}
-                  onClick={() => navigate(`/app/forms/${form.id}/analytics`)}
+                  onClick={() => navigate(`/dashboard/forms/${form.id}/analytics`)}
                 />
               </Tooltip>,
 

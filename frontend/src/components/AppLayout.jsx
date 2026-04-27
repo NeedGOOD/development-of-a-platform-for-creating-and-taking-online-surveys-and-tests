@@ -3,23 +3,21 @@ import { Button, Dropdown, Layout, Menu, Space, Typography, Grid } from 'antd';
 import {
   DashboardOutlined,
   FormOutlined,
+  HistoryOutlined,
   LogoutOutlined,
   PlusOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { Brand } from './Brand';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import { resetTestData } from '../testdata';
 
 const { Header, Sider, Content } = Layout;
 
-const testUser = {
-  name: 'Creator',
-  email: 'alex@test.com',
-  role: 'CREATOR',
-};
-
 function getSelectedKey(path) {
   if (path.startsWith('/dashboard/forms')) return '/dashboard/forms';
+  if (path.startsWith('/dashboard/attempts')) return '/dashboard/attempts';
   if (path.startsWith('/dashboard/profile')) return '/dashboard/profile';
   return '/dashboard';
 }
@@ -29,56 +27,55 @@ export default function AppLayout() {
   const isMobile = !screens.md;
 
   const [collapsed, setCollapsed] = useState(isMobile);
+  const { user, logout: logoutAuth, refresh } = useAuth();
 
   const navigate = useNavigate();
   const location = useLocation();
 
   const path = location.pathname;
-  const user = testUser;
 
   function logout() {
-    console.log('Logout');
-    alert('Logout demo');
+    logoutAuth();
+    navigate('/login');
   }
 
   const menuItems = useMemo(() => {
     return [
       { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
       { key: '/dashboard/forms', icon: <FormOutlined />, label: 'Forms' },
+      { key: '/dashboard/attempts', icon: <HistoryOutlined />, label: 'Attempts' },
       { key: '/dashboard/profile', icon: <UserOutlined />, label: 'Profile' },
     ];
   }, []);
 
-  const userMenu = useMemo(
-    () => ({
-      items: [
-        {
-          key: 'profile',
-          icon: <UserOutlined />,
-          label: 'Profile',
-          onClick: () => navigate('/dashboard/profile'),
+  const userMenu = {
+    items: [
+      {
+        key: 'profile',
+        icon: <UserOutlined />,
+        label: 'Profile',
+        onClick: () => navigate('/dashboard/profile'),
+      },
+      {
+        key: 'seed',
+        icon: <PlusOutlined />,
+        label: 'Reset Demo Data',
+        onClick: () => {
+          resetTestData();
+          refresh();
+          navigate('/dashboard');
         },
-        {
-          key: 'seed',
-          icon: <PlusOutlined />,
-          label: 'Reset Demo Data',
-          onClick: () => {
-            alert('Demo reset');
-            window.location.reload();
-          },
-        },
-        { type: 'divider' },
-        {
-          key: 'logout',
-          icon: <LogoutOutlined />,
-          danger: true,
-          label: 'Logout',
-          onClick: logout,
-        },
-      ],
-    }),
-    [navigate]
-  );
+      },
+      { type: 'divider' },
+      {
+        key: 'logout',
+        icon: <LogoutOutlined />,
+        danger: true,
+        label: 'Logout',
+        onClick: logout,
+      },
+    ],
+  };
 
   return (
     <Layout style={{ minHeight: '100vh', background: 'transparent' }}>
@@ -175,6 +172,8 @@ export default function AppLayout() {
               <Typography.Text className="sl-muted" style={{ fontWeight: 700 }}>
                 {path.startsWith('/dashboard/forms')
                   ? 'Forms'
+                  : path.startsWith('/dashboard/attempts')
+                  ? 'Attempts'
                   : path === '/dashboard/profile'
                   ? 'Profile'
                   : 'Dashboard'}

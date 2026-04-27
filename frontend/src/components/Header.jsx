@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button, Layout, Space } from 'antd';
 import { Brand } from './Brand';
 import { Link, Outlet } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 
 const { Header, Content, Footer } = Layout;
 
 export default function SiteHeader() {
-  const [isAuthed, setIsAuthed] = useState(false);
+  const { user, logout } = useAuth();
+  const isAuthed = Boolean(user);
 
   return (
     <Layout style={{ minHeight: '100vh', background: 'transparent' }}>
@@ -36,9 +38,12 @@ export default function SiteHeader() {
           </Link>
           <Space size={10}>
             {isAuthed ? (
-              <Link to="/app" style={{ textDecoration: 'none' }}>
-                <Button type="primary">Панель</Button>
-              </Link>
+              <>
+                <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+                  <Button type="primary">Панель</Button>
+                </Link>
+                <Button onClick={logout}>Вийти</Button>
+              </>
             ) : (
               <>
                 <Link to="/login" style={{ textDecoration: 'none' }}>
@@ -65,4 +70,3 @@ export default function SiteHeader() {
     </Layout>
   );
 }
-

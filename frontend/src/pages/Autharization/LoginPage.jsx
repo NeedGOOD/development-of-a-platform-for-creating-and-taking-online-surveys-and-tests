@@ -1,24 +1,34 @@
-import React from "react";
-import { Button, Form, Input, message, Space, Typography } from "antd";
-import { Link } from "react-router-dom";
+import React, { useEffect } from 'react';
+import { Button, Form, Input, message, Space, Typography } from 'antd';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GlassCard } from "../../components/GlassCard";
-import { login } from "../../components/fetch/auth";
-import { useRoute } from "../../components/function/route";
+import { useAuth } from '../../auth/AuthContext';
 
 export default function LoginPage() {
-  const route = useRoute();
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, login } = useAuth();
 
+  const from = location.state?.from?.pathname || '/dashboard';
+
+  useEffect(() => {
+    if (!user) return;
+    navigate(from, { replace: true });
+  }, [user, from, navigate]);
+
+  async function handleFinish(values) {
     try {
-      const result = await login(e.target);
+      const result = await login({
+        email: values.email,
+        password: values.password,
+      });
+
       message.success(`Успішний вхід! Ласкаво просимо, ${result.name}`);
-      // Тут можна додати логіку для збереження стану автентифікації, наприклад, в контексті або localStorage
-      route("/dashboard");
+      navigate(from, { replace: true });
     } catch (error) {
-      message.error("Помилка входу. Перевірте дані.");
+      message.error(error?.message || 'Помилка входу. Перевірте дані.');
     }
-  };
+  }
 
   return (
     <div className="sl-page sl-animateIn">
@@ -31,11 +41,19 @@ export default function LoginPage() {
           Демо-сторінка. Автентифікація буде підключена пізніше.
         </Typography.Paragraph>
 
-        <Form layout="vertical" onSubmitCapture={handleSubmit}>
-          <Form.Item label="Email" name="email">
+        <Form layout="vertical" onFinish={handleFinish}>
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[{ required: true, message: 'Введіть email' }]}
+          >
             <Input placeholder="Пошта" autoComplete="email" />
           </Form.Item>
-          <Form.Item label="Пароль" name="password">
+          <Form.Item
+            label="Пароль"
+            name="password"
+            rules={[{ required: true, message: 'Введіть пароль' }]}
+          >
             <Input.Password
               placeholder="Пароль"
               autoComplete="current-password"

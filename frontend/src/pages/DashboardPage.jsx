@@ -20,96 +20,15 @@ import {
   SearchOutlined,
 } from '@ant-design/icons';
 import { GlassCard } from '../components/GlassCard';
-
-const FORM_MODE = {
-  TEST: 'TEST',
-  SURVEY: 'SURVEY',
-};
-
-const FORM_STATUS = {
-  DRAFT: 'DRAFT',
-  PUBLISHED: 'PUBLISHED',
-};
-
-const testUser = {
-  id: 1,
-  name: 'Олександр',
-  role: 'CREATOR',
-};
-
-const testPublishedForms = [
-  {
-    id: 1,
-    title: 'JavaScript Basics',
-    description: 'Тест на базові знання JavaScript.',
-    mode: FORM_MODE.TEST,
-    status: FORM_STATUS.PUBLISHED,
-    accessCode: 'JS-101',
-  },
-  {
-    id: 2,
-    title: 'Feedback Survey',
-    description: 'Коротке опитування для збору відгуків.',
-    mode: FORM_MODE.SURVEY,
-    status: FORM_STATUS.PUBLISHED,
-    accessCode: 'FB-001',
-  },
-  {
-    id: 3,
-    title: 'React Fundamentals',
-    description: 'Перевірка знань React компонентів, props та state.',
-    mode: FORM_MODE.TEST,
-    status: FORM_STATUS.PUBLISHED,
-    accessCode: 'REACT-01',
-  },
-];
-
-const testMineForms = [
-  ...testPublishedForms,
-  {
-    id: 4,
-    title: 'HTML & CSS Draft',
-    description: 'Чернетка тесту по HTML та CSS.',
-    mode: FORM_MODE.TEST,
-    status: FORM_STATUS.DRAFT,
-    accessCode: null,
-  },
-  {
-    id: 5,
-    title: 'Student Survey Draft',
-    description: 'Чернетка опитування для студентів.',
-    mode: FORM_MODE.SURVEY,
-    status: FORM_STATUS.DRAFT,
-    accessCode: null,
-  },
-];
-
-const testAttempts = [
-  {
-    id: 101,
-    formId: 1,
-    formTitle: 'JavaScript Basics',
-    formMode: FORM_MODE.TEST,
-    status: 'SUBMITTED',
-    startedAt: '2026-04-25T12:30:00',
-  },
-  {
-    id: 102,
-    formId: 2,
-    formTitle: 'Feedback Survey',
-    formMode: FORM_MODE.SURVEY,
-    status: 'IN_PROGRESS',
-    startedAt: '2026-04-25T14:10:00',
-  },
-  {
-    id: 103,
-    formId: 3,
-    formTitle: 'React Fundamentals',
-    formMode: FORM_MODE.TEST,
-    status: 'SUBMITTED',
-    startedAt: '2026-04-24T18:45:00',
-  },
-];
+import {
+  FORM_MODE,
+  FORM_STATUS,
+  getFormByAccessCode,
+  listAttempts,
+  listForms,
+} from '../testdata';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 
 function modeTag(mode) {
   if (mode === FORM_MODE.TEST) return <Tag color="gold">TEST</Tag>;
@@ -118,22 +37,23 @@ function modeTag(mode) {
 
 export function DashboardPage() {
   const { message } = App.useApp();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const [published] = useState(testPublishedForms);
-  const [mine] = useState(testMineForms);
-  const [attempts] = useState(testAttempts);
   const [joinCode, setJoinCode] = useState('');
 
-  const user = testUser;
   const isCreator = user?.role === 'CREATOR' || user?.role === 'ADMIN';
+
+  const published = listForms({ status: FORM_STATUS.PUBLISHED });
+  const mine = listForms({ ownerId: user?.id });
+  const attempts = listAttempts({ userId: user?.id });
 
   const myDrafts = useMemo(() => {
     return mine.filter((form) => form.status !== FORM_STATUS.PUBLISHED);
   }, [mine]);
 
-  function navigate(path) {
-    console.log('Navigate to:', path);
-    message.info(`Перехід: ${path}`);
+  function go(path) {
+    navigate(path);
   }
 
   function joinByCode() {
@@ -144,16 +64,14 @@ export function DashboardPage() {
       return;
     }
 
-    const form = published.find((item) => {
-      return String(item.accessCode || '').toLowerCase() === code.toLowerCase();
-    });
+    const form = getFormByAccessCode(code);
 
     if (!form) {
       message.warning('Не знайдено форму з таким кодом');
       return;
     }
 
-    navigate(`/app/forms/${form.id}/take`);
+    go(`/dashboard/forms/${form.id}/take`);
   }
 
   return (
@@ -176,7 +94,7 @@ export function DashboardPage() {
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
-                  onClick={() => navigate('/app/forms/new')}
+                  onClick={() => go('/dashboard/forms/new')}
                 >
                   Новий тест/опитування
                 </Button>
@@ -184,7 +102,7 @@ export function DashboardPage() {
 
               <Button
                 icon={<ArrowRightOutlined />}
-                onClick={() => navigate('/app/forms')}
+                onClick={() => go('/dashboard/forms')}
               >
                 Відкрити форми
               </Button>
@@ -274,7 +192,7 @@ export function DashboardPage() {
                     attempt.status === 'SUBMITTED' ? (
                       <Button
                         type="link"
-                        onClick={() => navigate(`/app/attempts/${attempt.id}/result`)}
+                        onClick={() => go(`/dashboard/attempts/${attempt.id}/result`)}
                       >
                         Результат
                       </Button>
@@ -282,7 +200,7 @@ export function DashboardPage() {
                       <Button
                         type="primary"
                         icon={<PlayCircleOutlined />}
-                        onClick={() => navigate(`/app/forms/${attempt.formId}/take`)}
+                        onClick={() => go(`/dashboard/forms/${attempt.formId}/take`)}
                       >
                         Продовжити
                       </Button>
@@ -362,7 +280,7 @@ export function DashboardPage() {
                   <Button
                     size="small"
                     icon={<ArrowRightOutlined />}
-                    onClick={() => navigate(`/app/forms/${form.id}/take`)}
+                    onClick={() => go(`/dashboard/forms/${form.id}/take`)}
                   >
                     Відкрити
                   </Button>
