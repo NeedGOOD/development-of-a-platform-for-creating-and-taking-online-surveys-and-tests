@@ -13,15 +13,15 @@ export class AuthService {
         private jwtService: JwtService,
     ) { }
 
-    async authenticate(input: AuthInput): Promise<AuthResult> {
-        const user = await this.validateUser(input);
+    // async authenticate(input: AuthInput): Promise<AuthResult> {
+    //     const user = await this.validateUser(input);
 
-        if (!user) {
-            throw new UnauthorizedException();
-        }
+    //     if (!user) {
+    //         throw new UnauthorizedException();
+    //     }
 
-        return this.signIn(user);
-    }
+    //     return this.signIn(user);
+    // }
 
     async validateUser(input: AuthInput): Promise<SignInData | null> {
         const user = await this.userService.findUserByEmail(input.email);
